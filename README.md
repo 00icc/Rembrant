@@ -1,28 +1,22 @@
-## Usage
+# Rembrant
 
+## About
+Rembrant is an innovative application integrator that creates seamless connections between apps that don't natively communicate with each other. It serves as a bridge, enabling different software applications to work together harmoniously.
+
+## Features
+- **App Integration**: Connect disparate applications through a unified interface
+- **Data Synchronization**: Ensure data flows smoothly between different software systems
+- **Workflow Automation**: Create automated workflows between previously disconnected apps
+- **Custom Connectors**: Build and deploy custom connections for specific application needs
+- **Real-time Monitoring**: Track the status of your app connections
+
+## Tech Stack
+- Electron - Cross-platform desktop application framework
+- SolidJS - A performant UI framework for responsive interfaces
+- HTML/CSS/JavaScript - Core web technologies
+- TypeScript - For type-safe code and better developer experience
+
+## Getting Started
+To run the development server:
 ```bash
-$ npm install # or pnpm install or yarn install
-```
-
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm run dev`
-
-Runs the app in the development mode.<br>
-Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
-
-### `npm run build`
-
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-## Deployment
-
-Learn more about deploying your application with the [documentations](https://vite.dev/guide/static-deploy.html)
+npm run dev

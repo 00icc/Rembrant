@@ -1,68 +1,23 @@
-import { BrowserWindow, ipcMain } from 'electron';
-import * as fs from 'fs-extra';
-import * as path from 'path';
-import * as chokidar from 'chokidar';
-import Store from 'electron-store';
-
-// Define interfaces for our data structures
-interface ProjectConfig {
-  aeProjectPath?: string;
-  resolveProjectPath?: string;
-  watchFolders?: string[];
-  autoSync: boolean;
-  lastSyncTime?: string;
-}
-
-interface AELayer {
-  id: string;
-  name: string;
-  type: string;
-  properties: Record<string, any>;
-  effects?: any[];
-  masks?: any[];
-  parent?: string;
-  inPoint: number;
-  outPoint: number;
-  startTime: number;
-  // Additional properties specific to layer type
-  [key: string]: any;
-}
-
-interface AEComposition {
-  id: string;
-  name: string;
-  width: number;
-  height: number;
-  duration: number;
-  frameRate: number;
-  layers: AELayer[];
-}
-
-interface FusionNode {
-  id: string;
-  name: string;
-  type: string;
-  inputs: Record<string, any>;
-  position: { x: number; y: number };
-  // Additional properties specific to node type
-  [key: string]: any;
-}
+const { BrowserWindow, ipcMain, dialog } = require('electron');
+const fs = require('fs-extra');
+const path = require('path');
+const chokidar = require('chokidar');
+const Store = require('electron-store');
 
 // Create a store for persistent configuration
-const store = new Store<ProjectConfig>({
+const store = new Store({
   defaults: {
     autoSync: false,
     watchFolders: [],
   },
 });
 
-export class BridgeService {
-  private mainWindow: BrowserWindow | null = null;
-  private watchers: chokidar.FSWatcher[] = [];
-  private isProcessing = false;
-  
-  constructor(window: BrowserWindow) {
+class BridgeService {
+  constructor(window) {
     this.mainWindow = window;
+    this.watchers = [];
+    this.isProcessing = false;
+    
     this.setupIPC();
     this.initializeWatchers();
   }
@@ -70,9 +25,9 @@ export class BridgeService {
   /**
    * Set up IPC communication between renderer and main process
    */
-  private setupIPC() {
+  setupIPC() {
     // Handle project configuration updates
-    ipcMain.on('update-config', (_, config: Partial<ProjectConfig>) => {
+    ipcMain.on('update-config', (_, config) => {
       for (const [key, value] of Object.entries(config)) {
         store.set(key, value);
       }
@@ -111,31 +66,27 @@ export class BridgeService {
 
     // Handle AE project selection
     ipcMain.handle('select-ae-project', async () => {
-      // This would typically use a dialog to select a file
-      // For now, we'll just return a mock success
       const { canceled, filePaths } = await dialog.showOpenDialog({
-      properties: ['openFile'],
-      filters: [{ name: 'After Effects Projects', extensions: ['aep'] }]
-    });
-    return { success: !canceled, path: canceled ? '' : filePaths[0] };
+        properties: ['openFile'],
+        filters: [{ name: 'After Effects Projects', extensions: ['aep'] }]
+      });
+      return { success: !canceled, path: canceled ? '' : filePaths[0] };
     });
 
     // Handle Resolve project selection
     ipcMain.handle('select-resolve-project', async () => {
-      // This would typically use a dialog to select a file
-      // For now, we'll just return a mock success
       const { canceled, filePaths } = await dialog.showOpenDialog({
-      properties: ['openFile'],
-      filters: [{ name: 'DaVinci Resolve Projects', extensions: ['drp'] }]
-    });
-    return { success: !canceled, path: canceled ? '' : filePaths[0] };
+        properties: ['openFile'],
+        filters: [{ name: 'DaVinci Resolve Projects', extensions: ['drp'] }]
+      });
+      return { success: !canceled, path: canceled ? '' : filePaths[0] };
     });
   }
 
   /**
    * Initialize file watchers for After Effects project files
    */
-  private initializeWatchers() {
+  initializeWatchers() {
     // Close any existing watchers
     this.watchers.forEach(watcher => watcher.close());
     this.watchers = [];
@@ -154,10 +105,10 @@ export class BridgeService {
         console.log(`AE project file changed: ${path}`);
         if (store.get('autoSync') && !this.isProcessing) {
           try {
-          await this.syncProjects();
-        } catch (error) {
-          this.sendToRenderer('sync-error', { error: error.message });
-        }
+            await this.syncProjects();
+          } catch (error) {
+            this.sendToRenderer('sync-error', { error: error.message });
+          }
         } else {
           this.sendToRenderer('project-changed', { path, type: 'ae' });
         }
@@ -185,7 +136,7 @@ export class BridgeService {
   /**
    * Synchronize After Effects project with DaVinci Resolve
    */
-  private async syncProjects() {
+  async syncProjects() {
     if (this.isProcessing) {
       console.log('Sync already in progress, skipping');
       return;
@@ -228,7 +179,7 @@ export class BridgeService {
    * Note: This is a placeholder. In a real implementation, this would use
    * After Effects scripting API or parse AE project files.
    */
-  private async extractAECompositions(projectPath: string): Promise<AEComposition[]> {
+  async extractAECompositions(projectPath) {
     // This is a mock implementation
     // In a real app, this would use AE's scripting API or parse AE project files
     console.log(`Extracting compositions from ${projectPath}`);
@@ -286,11 +237,11 @@ export class BridgeService {
   /**
    * Convert After Effects compositions to Fusion nodes
    */
-  private convertToFusionNodes(compositions: AEComposition[]): Record<string, FusionNode[]> {
-    const result: Record<string, FusionNode[]> = {};
+  convertToFusionNodes(compositions) {
+    const result = {};
     
     compositions.forEach(comp => {
-      const nodes: FusionNode[] = [];
+      const nodes = [];
       let nodeIndex = 0;
       
       // Create a background node for the composition
@@ -410,7 +361,7 @@ export class BridgeService {
    * Note: This is a placeholder. In a real implementation, this would use
    * DaVinci Resolve's API to update the project.
    */
-  private async updateResolveProject(projectPath: string, fusionNodes: Record<string, FusionNode[]>) {
+  async updateResolveProject(projectPath, fusionNodes) {
     // This is a mock implementation
     // In a real app, this would use DaVinci Resolve's API
     console.log(`Updating Resolve project at ${projectPath}`);
@@ -428,7 +379,7 @@ export class BridgeService {
   /**
    * Send a message to the renderer process
    */
-  private sendToRenderer(channel: string, data?: any) {
+  sendToRenderer(channel, data) {
     if (this.mainWindow && !this.mainWindow.isDestroyed()) {
       this.mainWindow.webContents.send(channel, data);
     }
@@ -437,9 +388,11 @@ export class BridgeService {
   /**
    * Clean up resources when the service is no longer needed
    */
-  public dispose() {
+  dispose() {
     this.watchers.forEach(watcher => watcher.close());
     this.watchers = [];
     this.mainWindow = null;
   }
 }
+
+module.exports = BridgeService;

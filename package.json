@@ -34,3 +34,34 @@
     "vite-plugin-solid": "^2.11.2"
   }
 }
+{
+  "name": "rembrant",
+  "version": "0.1.0",
+  "description": "Application integration platform that connects incompatible apps",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "solid-scripts build",
+    "package": "electron-builder build --mac --win --linux"
+  },
+  "dependencies": {
+    "electron": "^latest",
+    "solid-js": "^latest"
+  },
+  "devDependencies": {
+    "electron-builder": "^latest",
+    "solid-scripts": "^latest"
+  },
+  "build": {
+    "appId": "com.rembrant.app",
+    "productName": "Rembrant",
+    "files": [
+      "build/**/*",
+      "electron/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets",
+      "output": "release"
+    }
+  }
+}
